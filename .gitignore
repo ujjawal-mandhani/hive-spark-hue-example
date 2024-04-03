@@ -1,0 +1,4 @@
+postgres
+hive-data
+spark-cluster/id_rsa
+spark-cluster/id_rsa.pub
