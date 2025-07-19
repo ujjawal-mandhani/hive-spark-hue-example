@@ -50,7 +50,7 @@ services:
     cpus: 0.5
     mem_reservation: 512m
     ports:
-      - 9077:8080
+      - 9071:8080
       - 9088:7077
       - 9099:10000
     volumes:
