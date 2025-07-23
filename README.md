@@ -44,13 +44,16 @@ spark-submit   --master yarn   --deploy-mode cluster   --conf spark.yarn.appMast
 
 ### Required HDFS command
 hdfs dfs -mkdir -p /user/spark/scripts
+
 hdfs dfs -put spark_udf_test.py /user/spark/scripts
+
 hdfs dfs -rm /user/spark/scripts/spark_udf_test.py
 
 ![alt text](src/hdfs_ui.png)
 
 ### Required Yarn command
 yarn application -list -appStates ALL
+
 yarn logs -applicationId <application_id>
 
 ![alt text](src/yarn_ui.png)
