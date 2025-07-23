@@ -38,3 +38,19 @@ Hue Hive Server
 Hue Spark sql
 
 ![alt text](src/hue-spark-sql.png)
+
+### Required spark-submit Commands
+spark-submit   --master yarn   --deploy-mode cluster   --conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3   --conf spark.executorEnv.PYSPARK_PYTHON=python3   hdfs:///user/spark/scripts/spark_udf_test.py
+
+### Required HDFS command
+hdfs dfs -mkdir -p /user/spark/scripts
+hdfs dfs -put spark_udf_test.py /user/spark/scripts
+hdfs dfs -rm /user/spark/scripts/spark_udf_test.py
+
+![alt text](src/hdfs_ui.png)
+
+### Required Yarn command
+yarn application -list -appStates ALL
+yarn logs -applicationId <application_id>
+
+![alt text](src/yarn_ui.png)

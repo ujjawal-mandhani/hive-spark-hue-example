@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   spark-master:
@@ -11,19 +11,47 @@ services:
       - 1005:4041
       - 1006:4040
     volumes:
-      - ./spark-cluster/id_rsa:/root/.ssh/id_rsa
-      - ./spark-cluster/id_rsa.pub:/root/.ssh/id_rsa.pub
-      - ./spark-cluster/id_rsa.pub:/root/.ssh/authorized_keys
+      # - ./spark-cluster/id_rsa:/root/.ssh/id_rsa
+      # - ./spark-cluster/id_rsa.pub:/root/.ssh/id_rsa.pub
+      # - ./spark-cluster/id_rsa.pub:/root/.ssh/authorized_keys
       - ./spark-cluster/spark-jobs/:/home/
-      - ./hive-data:/opt/hive/data/warehouse
+      - ./spark-cluster/spark-master:/opt/hadoop/data/dataNode
+      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/authorized_keys
+    command: >
+      bash -c '
+        /usr/sbin/sshd || echo "sshd failed";
+
+        # Wait for Namenode to be reachable
+        until nc -z namenode 8020; do
+          echo "Waiting for Namenode at namenode:8020..."
+          sleep 5
+        done
+
+        mkdir -p /usr/local/hadoop/logs /tmp/nm-local-dir
+
+        echo "Starting HDFS DataNode..."
+        /usr/local/hadoop/bin/hdfs --daemon start datanode
+
+        echo "Starting YARN NodeManager..."
+        yarn --daemon start nodemanager
+
+        echo "Starting Spark Worker..."
+        /usr/local/share/spark/sbin/start-master.sh;
+
+        tail -f /usr/local/hadoop/logs/* &
+        wait
+      '
+
     mem_limit: 3g
     cpus: 0.5
     mem_reservation: 512m
+    environment:
+      - YARN_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
+      - HADOOP_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
     depends_on:
-      - spark-worker-1
-      - spark-worker-2
+      - namenode
     networks:
-      - hive-network
+      - my_shared_network
 
   spark-worker-1:
     build: ./spark-cluster
@@ -36,11 +64,43 @@ services:
     mem_limit: 3g
     cpus: 0.5
     mem_reservation: 512m
+    depends_on:
+      - spark-master
+      - namenode
+    environment:
+      - YARN_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
+      - HADOOP_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
+    command: >
+      bash -c '
+        /usr/sbin/sshd || echo "sshd failed";
+
+        # Wait for Namenode to be reachable
+        until nc -z namenode 8020; do
+          echo "Waiting for Namenode at namenode:8020..."
+          sleep 5
+        done
+
+        mkdir -p /usr/local/hadoop/logs /tmp/nm-local-dir
+
+        echo "Starting HDFS DataNode..."
+        /usr/local/hadoop/bin/hdfs --daemon start datanode
+
+        echo "Starting YARN NodeManager..."
+        yarn --daemon start nodemanager
+
+        echo "Starting Spark Worker..."
+        /usr/local/share/spark/sbin/start-worker.sh spark://spark-master:7077
+
+        tail -f /usr/local/hadoop/logs/* &
+        wait
+      '
+
     volumes:
       - ./spark-cluster/spark-jobs/:/home/
-      - ./spark-cluster/id_rsa.pub:/root/.ssh/authorized_keys
+      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/authorized_keys
+      - ./spark-cluster/spark-worker-1:/opt/hadoop/data/dataNode
     networks:
-      - hive-network
+      - my_shared_network
 
   spark-worker-2:
     build: ./spark-cluster
@@ -53,12 +113,64 @@ services:
       - 9071:8080
       - 9088:7077
       - 9099:10000
-    volumes:
-      - ./spark-cluster/id_rsa.pub:/root/.ssh/authorized_keys
-      - ./spark-cluster/spark-jobs/:/home/
-    networks:
-      - hive-network
+    depends_on:
+      - spark-master
+      - namenode
+    environment:
+      - YARN_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
+      - HADOOP_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
+    command: >
+      bash -c '
+        /usr/sbin/sshd || echo "sshd failed";
 
+        # Wait for Namenode to be reachable
+        until nc -z namenode 8020; do
+          echo "Waiting for Namenode at namenode:8020..."
+          sleep 5
+        done
+
+        mkdir -p /usr/local/hadoop/logs /tmp/nm-local-dir
+
+        echo "Starting HDFS DataNode..."
+        /usr/local/hadoop/bin/hdfs --daemon start datanode
+
+        echo "Starting YARN NodeManager..."
+        yarn --daemon start nodemanager
+
+        echo "Starting Spark Worker..."
+        /usr/local/share/spark/sbin/start-worker.sh spark://spark-master:7077
+
+        tail -f /usr/local/hadoop/logs/* &
+        wait
+      '
+
+    volumes:
+      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/authorized_keys
+      - ./spark-cluster/spark-jobs/:/home/
+      - ./spark-cluster/spark-worker-2:/opt/hadoop/data/dataNode
+    networks:
+      - my_shared_network
+  
+  namenode:
+    build: ./hadoop_installation/
+    container_name: namenode
+    hostname: namenode
+    volumes:
+      - ./hadoop_installation/hadoop_data:/hadoop_data
+      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/authorized_keys
+      - ./hadoop_installation/hadoop_config/ssh/id_rsa:/root/.ssh/id_rsa
+      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+      - ./hadoop_installation/hadoop_namenode:/opt/hadoop/data/nameNode
+    user: root
+    mem_limit: 3g
+    cpus: 0.5
+    mem_reservation: 512m
+    ports:
+      - "9870:9870"
+      - 8088:8088
+    networks:
+      - my_shared_network
+  
   postgres:
     image: postgres
     restart: unless-stopped
@@ -73,7 +185,7 @@ services:
     volumes:
       - ./postgres/postgres_data:/var/lib/postgresql/data
     networks:
-      - hive-network
+      - my_shared_network
 
   metastore:
     image: apache/hive:4.0.0
@@ -94,7 +206,7 @@ services:
         source: ./jars/postgresql-42.6.0.jar
         target: /opt/hive/lib/postgres.jar
     networks:
-      - hive-network
+      - my_shared_network
 
   hiveserver2:
     image: apache/hive:4.0.0
@@ -111,7 +223,7 @@ services:
     volumes:
       - ./hive-data:/opt/hive/data/warehouse
     networks:
-      - hive-network
+      - my_shared_network
 
   hue:
     image: gethue/hue
@@ -123,7 +235,7 @@ services:
       - ./hue.ini/hue.ini:/usr/share/hue/desktop/conf/hue.ini
       - ./hue.ini/desktop.db:/usr/share/hue/desktop/desktop.db
     networks:
-      - hive-network
+      - my_shared_network
 
 volumes:
   hive-db:
@@ -131,5 +243,6 @@ volumes:
 
 
 networks:
-  hive-network:
-    driver: bridge
+  my_shared_network:
+    # driver: bridge
+    external: true

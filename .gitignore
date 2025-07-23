@@ -2,3 +2,15 @@ postgres
 hive-data
 spark-cluster/id_rsa
 spark-cluster/id_rsa.pub
+hadoop_installation/hadoop_namenode
+hadoop_installation/hadoop_data
+hadoop_installation/hadoop_config/ssh/id_rsa
+hadoop_installation/hadoop_config/ssh/id_rsa.pub
+hue.ini
+spark-cluster/spark-jobs/spark-jobs/write_data
+spark-cluster/spark-jobs/spark-jobs/spark-warehouse
+spark-cluster/spark-jobs/spark-jobs/final_op
+spark-cluster/spark-jobs/spark-jobs/artifacts
+spark-cluster/spark-master
+spark-cluster/spark-worker-1
+spark-cluster/spark-worker-2
