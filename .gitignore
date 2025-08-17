@@ -14,3 +14,6 @@ spark-cluster/spark-jobs/spark-jobs/artifacts
 spark-cluster/spark-master
 spark-cluster/spark-worker-1
 spark-cluster/spark-worker-2
+spark-cluster/spark-jobs/metastore_db
+spark-cluster/spark-jobs/derby.log
+spark-cluster/spark-jobs/airflow

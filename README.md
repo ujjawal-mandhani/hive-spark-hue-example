@@ -57,3 +57,14 @@ yarn application -list -appStates ALL
 yarn logs -applicationId <application_id>
 
 ![alt text](src/yarn_ui.png)
+
+### spark yarn setup confirmation
+
+dcexec spark-master jps -> DataNode, Master
+dcexec spark-worker-1 jps -> Worker, DataNode
+dcexec spark-worker-2 jps -> Worker, DataNode
+dcexec namenode jps -> NameNode, ResourceManager
+
+Special rule for ThriftServer
+Spark hard-codes: “Cluster deploy mode is not applicable to Spark Thrift server.”
+So the ThriftServer must be started in client mode; executor containers still run on the worker nodes.
