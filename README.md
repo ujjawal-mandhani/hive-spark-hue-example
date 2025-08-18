@@ -49,6 +49,14 @@ hdfs dfs -put spark_udf_test.py /user/spark/scripts
 
 hdfs dfs -rm /user/spark/scripts/spark_udf_test.py
 
+**Upload required jars**
+
+```bash
+hdfs dfs -mkdir -p hdfs://namenode:8020/user/spark/jars/spark-3.5.0/
+hdfs dfs -put /usr/local/share/spark/python/lib/py4j-0.10.9.7-src.zip hdfs://namenode:8020/user/spark/jars/spark-3.5.0/
+hdfs dfs -put /usr/local/share/spark/python/lib/pyspark.zip hdfs://namenode:8020/user/spark/jars/spark-3.5.0/
+```
+
 ![alt text](src/hdfs_ui.png)
 
 ### Required Yarn command
