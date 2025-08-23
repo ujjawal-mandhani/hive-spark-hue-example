@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  
+  <!-- JDBC connection for Metastore -->
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:postgresql://postgres:5432/metastore_db</value>
+    <description>JDBC URL to connect to Postgres backing Hive Metastore</description>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>org.postgresql.Driver</value>
+    <description>Driver class for Postgres</description>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>hive</value>
+    <description>Username for Postgres</description>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>password</value>
+    <description>Password for Postgres</description>
+  </property>
+
+  <!-- Hive Metastore service -->
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://metastore:9083</value>
+    <description>Thrift URI for remote metastore</description>
+  </property>
+
+  <!-- Warehouse directory (HDFS or local) -->
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>hdfs://namenode:8020/user/airflow/dbt_output</value>
+    <description>Default location for managed tables</description>
+  </property>
+
+  <property>
+    <name>hive.execution.engine</name>
+    <value>mr</value>
+    <description>Use MapReduce or Tez or Spark</description>
+  </property>
+
+  <!-- Optional: schema auto creation -->
+  <property>
+    <name>datanucleus.schema.autoCreateAll</name>
+    <value>true</value>
+  </property>
+
+  <!-- Optional: metadata consistency check -->
+  <property>
+    <name>hive.metastore.schema.verification</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>hive.metastore.warehouse.external.dir</name>
+    <value>hdfs://namenode:8020/user/airflow/dbt_output</value>
+  </property>
+  
+</configuration>

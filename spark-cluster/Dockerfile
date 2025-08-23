@@ -28,11 +28,13 @@ COPY hadoop_config/core-site.xml $HADOOP_CONF_DIR/core-site.xml
 COPY hadoop_config/hdfs-site.xml $HADOOP_CONF_DIR/hdfs-site.xml
 COPY hadoop_config/yarn-site.xml $HADOOP_CONF_DIR/yarn-site.xml
 COPY hadoop_config/mapred-site.xml $HADOOP_CONF_DIR/mapred-site.xml
+COPY hadoop_config/hive-site.xml $HADOOP_CONF_DIR/hive-site.xml
 COPY hadoop_config/hadoop-env.sh $HADOOP_CONF_DIR/hadoop-env.sh
 RUN yum install -y sudo nc
 RUN curl https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark3.5-bundle_2.12/1.0.2/hudi-spark3.5-bundle_2.12-1.0.2.jar --output "$SPARK_HOME"/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar && \
 curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-storage-api-2.8.1.jar --output "$SPARK_HOME"/jars/hive-storage-api-2.8.1.jar && \
-curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar
+curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
+curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar --output "$SPARK_HOME"/jars/postgresql-42.6.0.jar
 # COPY ./hadoop_config/workers $HADOOP_CONF_DIR/workers
 # RUN yum install python3-pip
 # CMD [ "sh", "-c", "/usr/sbin/sshd; sh /usr/local/share/spark/sbin/start-all.sh; yarn --daemon start nodemanager; tail -f /dev/null" ]
