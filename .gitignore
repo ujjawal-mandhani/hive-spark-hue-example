@@ -17,3 +17,5 @@ spark-cluster/spark-worker-2
 spark-cluster/spark-jobs/metastore_db
 spark-cluster/spark-jobs/derby.log
 spark-cluster/spark-jobs/airflow
+spark-cluster/livy_conf/livy-cert.pem
+spark-cluster/livy_conf/livy.jks

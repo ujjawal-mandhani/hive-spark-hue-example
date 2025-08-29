@@ -35,6 +35,16 @@ RUN curl https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark3.5-bundle_2.1
 curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-storage-api-2.8.1.jar --output "$SPARK_HOME"/jars/hive-storage-api-2.8.1.jar && \
 curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
 curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar --output "$SPARK_HOME"/jars/postgresql-42.6.0.jar
+# ENV LIVY_HOME=/usr/local/share/livy
+# RUN LIVY_VERSION=$(curl -s https://downloads.apache.org/incubator/livy/| grep -o '[0-9.]\+-incubating/' | sed 's#/##' | sort -V | tail -n 1) && \
+#     echo https://downloads.apache.org/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}_2.12-bin.zip && \
+#     curl -fL https://downloads.apache.org/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}_2.12-bin.zip --output ${LIVY_VERSION}.zip && \
+#     unzip "$LIVY_VERSION.zip" -d /usr/local/share && \
+#     mv /usr/local/share/apache-livy-${LIVY_VERSION}_2.12-bin "$LIVY_HOME" && mkdir -p /usr/local/share/livy/logs && chmod -R 777 /usr/local/share/livy/logs && \
+#     rm "$LIVY_VERSION.zip"
+# ENV PATH="$PATH:$LIVY_HOME/bin/"
+# COPY ./livy_conf/livy.conf "$LIVY_HOME/conf/livy.conf"
+# COPY ./livy_conf/livy.jks "$LIVY_HOME/conf/livy.jks"
 # COPY ./hadoop_config/workers $HADOOP_CONF_DIR/workers
 # RUN yum install python3-pip
 # CMD [ "sh", "-c", "/usr/sbin/sshd; sh /usr/local/share/spark/sbin/start-all.sh; yarn --daemon start nodemanager; tail -f /dev/null" ]

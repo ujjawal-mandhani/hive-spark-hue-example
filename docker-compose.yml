@@ -10,6 +10,7 @@ services:
       - 1000:10000
       - 1005:4041
       - 1006:4040
+      - 8998:8998
     volumes:
       - ./spark-cluster/spark-jobs/:/home/
       - ./spark-cluster/spark-master:/opt/hadoop/data/dataNode
@@ -32,11 +33,14 @@ services:
         echo "Starting YARN NodeManager..."
         yarn --daemon start nodemanager
 
-        echo "Starting Spark Worker..."
+        echo "Starting Spark Master..."
         /usr/local/share/spark/sbin/start-master.sh;
 
+        echo "Starting livy Server..."
+        /usr/local/share/livy/bin/livy-server
+
         echo "Starting Thirft Server..."
-        /usr/local/share/spark/sbin/start-thriftserver.sh --master yarn --deploy-mode client --name ThriftServer \
+          /usr/local/share/spark/sbin/start-thriftserver.sh --master yarn --deploy-mode client --name ThriftServer \
           --conf spark.sql.warehouse.dir=hdfs://namenode:8020/user/airflow/dbt_output \
           --conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3 --conf spark.executorEnv.PYSPARK_PYTHON=python3 \
           --conf spark.serializer=org.apache.spark.serializer.KryoSerializer \
@@ -49,9 +53,9 @@ services:
         wait
       '
 
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
+    # mem_limit: 3g
+    # cpus: 0.5
+    # mem_reservation: 512m
     environment:
       - YARN_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
       - HADOOP_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
@@ -68,9 +72,9 @@ services:
       - 9044:8080
       - 9055:7077
       - 9066:10000
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
+    # mem_limit: 3g
+    # cpus: 0.5
+    # mem_reservation: 512m
     depends_on:
       - spark-master
       - namenode
@@ -113,9 +117,9 @@ services:
     build: ./spark-cluster
     container_name: spark-worker-2
     restart: always
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
+    # mem_limit: 3g
+    # cpus: 0.5
+    # mem_reservation: 512m
     ports:
       - 9071:8080
       - 9088:7077
@@ -169,9 +173,9 @@ services:
       - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
       - ./hadoop_installation/hadoop_namenode:/opt/hadoop/data/nameNode
     user: root
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
+    # mem_limit: 3g
+    # cpus: 0.5
+    # mem_reservation: 512m
     ports:
       - "9870:9870"
       - 8088:8088
@@ -220,50 +224,6 @@ services:
       - ./spark-cluster/hadoop_config/hive-site.xml:/opt/hive/conf/hive-site.xml   
     networks:
       - my_shared_network
-      
-  # livy:
-  #   image: apache/livy:0.8.0-incubating
-  #   container_name: livy
-  #   depends_on:
-  #     - namenode
-  #   ports:
-  #     - "8998:8998"
-  #   environment:
-  #     - LIVY_SPARK_MASTER=yarn
-  #     - HADOOP_CONF_DIR=/etc/hadoop/conf
-  #   volumes:
-  #     - ./spark-cluster/hadoop_config:/etc/hadoop/conf
-  #   networks:
-  #     - my_shared_network
-
-  # hiveserver2:
-  #   image: apache/hive:4.0.0
-  #   restart: unless-stopped
-  #   container_name: hiveserver2
-  #   environment:
-  #     HIVE_SERVER2_THRIFT_PORT: 10000
-  #     SERVICE_OPTS: '-Xmx1G -Dhive.metastore.uris=thrift://metastore:9083'
-  #     IS_RESUME: 'true'
-  #     SERVICE_NAME: hiveserver2
-  #   ports:
-  #     - 10000:10000
-  #     - 10002:10002
-  #   volumes:
-  #     - ./hive-data:/opt/hive/data/warehouse
-  #   networks:
-  #     - my_shared_network
-
-  # hue:
-  #   image: gethue/hue
-  #   restart: unless-stopped
-  #   container_name: hue
-  #   ports:
-  #     - 11004:8888
-  #   volumes:
-  #     - ./hue.ini/hue.ini:/usr/share/hue/desktop/conf/hue.ini
-  #     - ./hue.ini/desktop.db:/usr/share/hue/desktop/desktop.db
-  #   networks:
-  #     - my_shared_network
 
 volumes:
   hive-db:

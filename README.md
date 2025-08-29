@@ -76,3 +76,35 @@ dcexec namenode jps -> NameNode, ResourceManager
 Special rule for ThriftServer
 Spark hard-codes: “Cluster deploy mode is not applicable to Spark Thrift server.”
 So the ThriftServer must be started in client mode; executor containers still run on the worker nodes.
+
+##### Thrift and Livy server
+
+**Note** For Ease thrift server is started on spark-master and livy server is started on spark-worker-1 (starting both thrift and livy are not working on same server)
+
+curl -X POST http://spark-master:8998/batches \
+-H "Content-Type: application/json" \
+-d '{
+      "name": "daily-etl",
+      "file": "hdfs://namenode:8020/user/spark/scripts/spark_udtf_exmple.py",
+      "conf": {
+        "spark.sql.adaptive.enabled": "true"
+      }
+    }'
+
+##### Livy generate JKS
+```bash
+keytool -genkeypair \
+  -alias livy-server \
+  -keyalg RSA \
+  -keystore livy.jks \
+  -storepass changeit \
+  -keypass changeit \
+  -dname "CN=spark-master, OU=IT, O=MyOrg, L=MyCity, S=MyState, C=IN" \
+  -ext SAN=dns:spark-master
+
+keytool -exportcert \
+  -alias livy-server \
+  -keystore livy.jks \
+  -storepass changeit \
+  -rfc -file livy-cert.pem
+```
