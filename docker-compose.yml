@@ -36,8 +36,8 @@ services:
         echo "Starting Spark Master..."
         /usr/local/share/spark/sbin/start-master.sh;
 
-        echo "Starting livy Server..."
-        /usr/local/share/livy/bin/livy-server
+        # echo "Starting livy Server..."
+        # /usr/local/share/livy/bin/livy-server
 
         echo "Starting Thirft Server..."
           /usr/local/share/spark/sbin/start-thriftserver.sh --master yarn --deploy-mode client --name ThriftServer \
