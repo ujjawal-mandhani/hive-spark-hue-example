@@ -19,8 +19,8 @@ COPY spark-env.sh /usr/local/share/spark/conf/spark-env.sh
 COPY slaves /usr/local/share/spark/conf/slaves
 ENV HADOOP_HOME=/usr/local/hadoop
 RUN HADOOP_VERSION=$(curl -s https://downloads.apache.org/hadoop/common/ | grep -o 'hadoop-[0-9.]\+/' | sed 's#/##' | sort -V | tail -n 1) && \
-    echo "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION.tar.gz" && \
-    curl -fL "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION.tar.gz" | tar xfz - -C /usr/local/share && \
+    echo "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION-lean.tar.gz" && \
+    curl -fL "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION-lean.tar.gz" | tar xfz - -C /usr/local/share && \
     mv "/usr/local/share/$HADOOP_VERSION" "$HADOOP_HOME"
 ENV PATH="$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin"
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
@@ -34,7 +34,9 @@ RUN yum install -y sudo nc
 RUN curl https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark3.5-bundle_2.12/1.0.2/hudi-spark3.5-bundle_2.12-1.0.2.jar --output "$SPARK_HOME"/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar && \
 curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-storage-api-2.8.1.jar --output "$SPARK_HOME"/jars/hive-storage-api-2.8.1.jar && \
 curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
-curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar --output "$SPARK_HOME"/jars/postgresql-42.6.0.jar
+curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar --output "$SPARK_HOME"/jars/postgresql-42.6.0.jar && \
+curl https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.9.2/iceberg-spark-runtime-3.5_2.12-1.9.2.jar --output "$SPARK_HOME"/jars/iceberg-spark-runtime-3.5_2.12-1.9.2.jar
+
 # ENV LIVY_HOME=/usr/local/share/livy
 # RUN LIVY_VERSION=$(curl -s https://downloads.apache.org/incubator/livy/| grep -o '[0-9.]\+-incubating/' | sed 's#/##' | sort -V | tail -n 1) && \
 #     echo https://downloads.apache.org/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}_2.12-bin.zip && \

@@ -1,14 +1,16 @@
 # Dockerfile.hadoop-yarn
 # FROM openjdk:11-jre-slim
-FROM openjdk:11-jdk-slim
+FROM openjdk:latest
+RUN microdnf update
+RUN microdnf install yum
 ENV HADOOP_HOME=/usr/local/hadoop
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
-ENV JAVA_HOME=/usr/local/openjdk-11
 ENV PATH=$PATH:/opt/hadoop/bin:/opt/hadoop/sbin
-RUN apt-get update && apt-get install -y sudo openssl openssh-client curl bash procps net-tools ssh rsync && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y sudo openssl openssh-client curl bash procps net-tools ssh rsync && rm -rf /var/lib/apt/lists/*
+RUN yum install -y openssh-server openssh-clients hostname telnet 
 RUN HADOOP_VERSION=$(curl -s https://downloads.apache.org/hadoop/common/ | grep -o 'hadoop-[0-9.]\+/' | sed 's#/##' | sort -V | tail -n 1) && \
-    echo "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION.tar.gz" && \
-    curl -fL "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION.tar.gz" | tar xfz - -C /usr/local/share && \
+    echo "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION-lean.tar.gz" && \
+    curl -fL "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION-lean.tar.gz" | tar xfz - -C /usr/local/share && \
     mv "/usr/local/share/$HADOOP_VERSION" "$HADOOP_HOME"
 ENV PATH="$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin"
 # Basic pseudo-distributed configs (YARN + HDFS in one container)
@@ -23,7 +25,24 @@ RUN ssh-keygen -A
 COPY ./hadoop_config/ssh/sshd_config /etc/ssh/sshd_config
 COPY ./hadoop_config/ssh/ssh_config /etc/ssh/ssh_config
 RUN mkdir -p /run/sshd
-RUN apt-get update && apt-get install -y python3 python3-pip
+ENV SPARK_HOME=/usr/local/share/spark
+RUN SPARK_VERSION=spark-3.5.0 && \
+    echo "https://archive.apache.org/dist/spark/$SPARK_VERSION/$SPARK_VERSION-bin-hadoop3.tgz" && \
+    curl -fL "https://archive.apache.org/dist/spark/$SPARK_VERSION/$SPARK_VERSION-bin-hadoop3.tgz" | tar xfz - -C /usr/local/share && \
+    mv "/usr/local/share/$SPARK_VERSION-bin-hadoop3" "$SPARK_HOME"
+# COPY spark-3.5.0-bin-hadoop3.tgz .
+# RUN tar -xvzf spark-3.5.0-bin-hadoop3.tgz -C /usr/local/share/ && mv /usr/local/share/spark-3.5.0-bin-hadoop3 /usr/local/share/spark && rm spark-3.5.0-bin-hadoop3.tgz
+ENV PATH="$PATH:$SPARK_HOME/bin"
+ENV PYTHONPATH="$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.9-src.zip"
+ENV PYSPARK_PYTHON=/usr/bin/python3
+RUN yum groupinstall "Development Tools" -y && yum install gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make -y  \
+&& yum install python3.11 python3.11-pip -y && pip3 install pandas pyarrow
+RUN curl https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark3.5-bundle_2.12/1.0.2/hudi-spark3.5-bundle_2.12-1.0.2.jar --output "$SPARK_HOME"/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar && \
+curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-storage-api-2.8.1.jar --output "$SPARK_HOME"/jars/hive-storage-api-2.8.1.jar && \
+curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
+curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar --output "$SPARK_HOME"/jars/postgresql-42.6.0.jar && \
+curl https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.9.2/iceberg-spark-runtime-3.5_2.12-1.9.2.jar --output "$SPARK_HOME"/jars/iceberg-spark-runtime-3.5_2.12-1.9.2.jar
+# RUN apt-get update && apt-get install -y python3 python3-pip
 # Format HDFS on first start & launch all daemons
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

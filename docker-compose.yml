@@ -39,15 +39,38 @@ services:
         # echo "Starting livy Server..."
         # /usr/local/share/livy/bin/livy-server
 
+        until hdfs dfsadmin -safemode get | grep -q "Safe mode is OFF"; do
+          echo "HDFS safe mode is ON, waiting..."
+          sleep 5
+        done
+        echo "HDFS safe mode is OFF, starting thrift server..."
+
         echo "Starting Thirft Server..."
-          /usr/local/share/spark/sbin/start-thriftserver.sh --master yarn --deploy-mode client --name ThriftServer \
+        /usr/local/share/spark/sbin/start-thriftserver.sh --master yarn --deploy-mode client --name ThriftServer \
           --conf spark.sql.warehouse.dir=hdfs://namenode:8020/user/airflow/dbt_output \
           --conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3 --conf spark.executorEnv.PYSPARK_PYTHON=python3 \
           --conf spark.serializer=org.apache.spark.serializer.KryoSerializer \
-          --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog \
-          --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension \
-          --conf spark.hadoop.hive.metastore.warehouse.dir=hdfs://namenode:8020/user/airflow/dbt_output \
+          --conf spark.sql.catalog.hudi=org.apache.spark.sql.hudi.catalog.HoodieCatalog \
+          --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension,org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions \
+          --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog \
+          --conf spark.sql.catalog.spark_catalog.type=hive \
+          --conf spark.sql.catalog.spark_catalog.uri=thrift://metastore:9083 \
+          --conf spark.sql.catalog.iceberg=org.apache.iceberg.spark.SparkCatalog \
+          --conf spark.sql.catalog.iceberg.type=hive \
+          --conf spark.sql.catalog.iceberg.uri=thrift://metastore:9083 \
+          --conf spark.sql.catalog.iceberg.warehouse=hdfs://namenode:8020/user/airflow/dbt_output \
+          --conf spark.executor.memory=512m \
+          --conf spark.executor.cores=1 \
+          --conf spark.executor.instances=1
           --files hdfs://namenode:8020/user/spark/jars/spark-3.5.0/pyspark.zip,hdfs://namenode:8020/user/spark/jars/spark-3.5.0/py4j-0.10.9.7-src.zip
+          # --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog \
+          # --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension \
+          # --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog \
+          # --conf spark.sql.catalog.local=org.apache.iceberg.spark.SparkCatalog \
+          # --conf spark.sql.catalog.local.type=hadoop \
+          # --conf spark.sql.catalog.local.warehouse=hdfs://namenode:8020/user/airflow/dbt_output \
+          # --conf spark.sql.catalog.spark_catalog.type=hive \
+          # --conf spark.hadoop.hive.metastore.warehouse.dir=hdfs://namenode:8020/user/airflow/dbt_output \
 
         tail -f /usr/local/hadoop/logs/* &
         wait
