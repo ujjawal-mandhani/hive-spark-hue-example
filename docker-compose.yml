@@ -61,7 +61,7 @@ services:
           --conf spark.sql.catalog.iceberg.warehouse=hdfs://namenode:8020/user/airflow/dbt_output \
           --conf spark.executor.memory=512m \
           --conf spark.executor.cores=1 \
-          --conf spark.executor.instances=1
+          --conf spark.executor.instances=1 \
           --files hdfs://namenode:8020/user/spark/jars/spark-3.5.0/pyspark.zip,hdfs://namenode:8020/user/spark/jars/spark-3.5.0/py4j-0.10.9.7-src.zip
           # --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog \
           # --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension \

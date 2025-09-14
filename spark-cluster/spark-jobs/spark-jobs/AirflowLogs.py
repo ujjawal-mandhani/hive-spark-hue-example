@@ -13,13 +13,14 @@ from pyspark.sql.functions import *
 from pyspark.sql import SparkSession
 import sys
 import json
+import logging as log
 
 spark = SparkSession.builder.getOrCreate()
 spark.sparkContext.setLogLevel("WARN")
 
 spark_configs = json.loads(sys.argv[1])
-
-
+incremental_conf = spark_configs.get("incremental", 'N')
+log.info(f":::::::::::::::: incremental_conf is {incremental_conf}")
 df = spark.read.json("hdfs:///user/airflow_logs/celery_celery-worker-1")
 # namenode:8020
 df_exploded = spark.sql("""
@@ -41,6 +42,7 @@ df_exploded = spark.sql("""
         input_file_name() as hdfs_file_name
     from {df}
 """, df=df)
+log.info(f":::::::::::::::: df_hudi count {df_exploded.count()}")
 # df_exploded.filter("dag_id!='torrent_scrapper_dag'").show(10, False)
 # spark.sql("""
 #     select  dag_id, run_id, task_id, timestamp, count(1) as cnt
@@ -74,6 +76,7 @@ if spark_configs.get("incremental", 'N') == "Y":
 else:
     mode = "append"
     df_hudi = spark.read.format("hudi").load("hdfs:///user/airflow_logs/transformed/celery_celery_worker_1")
+    log.info(f":::::::::::::::: df_hudi count {df_hudi.count()}")
     # namenode:8020
     df_final = spark.sql("""
         with distinct_hudi_file_name as (
@@ -89,10 +92,12 @@ else:
             on A.hdfs_file_name = B.hdfs_file_name 
             where B.hdfs_file_name is null
         )
-        select * from {df_exploded} A
+        select A.* 
+        from {df_exploded} A
         join final_blck B 
         on A.hdfs_file_name = B.hdfs_file_name
     """, df_hudi=df_hudi, df_exploded=df_exploded)
+    log.info(f":::::::::::::::: df_final count {df_final.count()}")
 
 if df_final.take(1) != []:
     df_final.write.format("hudi") \

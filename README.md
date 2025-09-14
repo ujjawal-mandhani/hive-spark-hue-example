@@ -1,53 +1,10 @@
-### Hive Read and write using spark 
+### Required HDFS command
 
 ```bash
-docker-compose up 
-docker exec -it spark-master bash
-cd home/spark-jobs/
-spark-submit spark_job.py
-```
-
-### Metastore db 
-telnet metastore 9083
-
-### HiveServer 
-telnet hiveserver2 10000
-
-### Hue Server 
-telnet hue 8888
-
-#### Hue Conf 
-
-[Hue url](http://0.0.0.0:11004/hue/editor/?type=hive)
-
-Default Password is -> password 
-Default User Name is -> Ujjawal
-
-In order to update password delete hue.ini/desktop.db
-
-### ScreenShots 
-
-Hue Postgres 
-
-![alt text](src/hue-postgres.png)
-
-Hue Hive Server 
-
-![alt text](src/hue-hive.png)
-
-Hue Spark sql
-
-![alt text](src/hue-spark-sql.png)
-
-### Required spark-submit Commands
-spark-submit   --master yarn   --deploy-mode cluster   --conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3   --conf spark.executorEnv.PYSPARK_PYTHON=python3   hdfs:///user/spark/scripts/spark_udf_test.py
-
-### Required HDFS command
 hdfs dfs -mkdir -p /user/spark/scripts
-
 hdfs dfs -put spark_udf_test.py /user/spark/scripts
-
 hdfs dfs -rm /user/spark/scripts/spark_udf_test.py
+```
 
 **Upload required jars**
 
@@ -55,7 +12,7 @@ hdfs dfs -rm /user/spark/scripts/spark_udf_test.py
 hdfs dfs -mkdir -p hdfs://namenode:8020/user/spark/jars/spark-3.5.0/
 hdfs dfs -put /usr/local/share/spark/python/lib/py4j-0.10.9.7-src.zip hdfs://namenode:8020/user/spark/jars/spark-3.5.0/
 hdfs dfs -put /usr/local/share/spark/python/lib/pyspark.zip hdfs://namenode:8020/user/spark/jars/spark-3.5.0/
-bash-4.4# hdfs dfs -put $SPARK_HOME/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar hdfs://namenode:8020/user/spark/jars
+hdfs dfs -put $SPARK_HOME/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar hdfs://namenode:8020/user/spark/jars
 pyspark --conf spark.serializer=org.apache.spark.serializer.KryoSerializer --conf spark.sql.catalog.hudi=org.apache.spark.sql.hudi.catalog.HoodieCatalog --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension --conf spark.sql.catalog.spark_catalog.type=hive --conf spark.sql.catalog.spark_catalog.uri=thrift://metastore:9083
 hdfs dfs -put $SPARK_HOME/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar hdfs://namenode:8020/user/spark/jars/spark-3.5.0
 
@@ -82,35 +39,3 @@ Special rule for ThriftServer
 Spark hard-codes: “Cluster deploy mode is not applicable to Spark Thrift server.”
 So the ThriftServer must be started in client mode; executor containers still run on the worker nodes.
 yarn node -list -showDetails
-
-##### Thrift and Livy server
-
-**Note** For Ease thrift server is started on spark-master and livy server is started on spark-worker-1 (starting both thrift and livy are not working on same server)
-
-curl -X POST http://spark-master:8998/batches \
--H "Content-Type: application/json" \
--d '{
-      "name": "daily-etl",
-      "file": "hdfs://namenode:8020/user/spark/scripts/spark_udtf_exmple.py",
-      "conf": {
-        "spark.sql.adaptive.enabled": "true"
-      }
-    }'
-
-##### Livy generate JKS
-```bash
-keytool -genkeypair \
-  -alias livy-server \
-  -keyalg RSA \
-  -keystore livy.jks \
-  -storepass changeit \
-  -keypass changeit \
-  -dname "CN=spark-master, OU=IT, O=MyOrg, L=MyCity, S=MyState, C=IN" \
-  -ext SAN=dns:spark-master
-
-keytool -exportcert \
-  -alias livy-server \
-  -keystore livy.jks \
-  -storepass changeit \
-  -rfc -file livy-cert.pem
-```
