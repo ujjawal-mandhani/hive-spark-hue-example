@@ -36,6 +36,10 @@ curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-
 curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
 curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar --output "$SPARK_HOME"/jars/postgresql-42.6.0.jar && \
 curl https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.9.2/iceberg-spark-runtime-3.5_2.12-1.9.2.jar --output "$SPARK_HOME"/jars/iceberg-spark-runtime-3.5_2.12-1.9.2.jar
+RUN rm -f /etc/yum.repos.d/bintray-rpm.repo && \
+    curl -L https://www.scala-sbt.org/sbt-rpm.repo > sbt-rpm.repo && \
+    mv sbt-rpm.repo /etc/yum.repos.d/ && \
+    yum install sbt -y
 
 # ENV LIVY_HOME=/usr/local/share/livy
 # RUN LIVY_VERSION=$(curl -s https://downloads.apache.org/incubator/livy/| grep -o '[0-9.]\+-incubating/' | sed 's#/##' | sort -V | tail -n 1) && \
