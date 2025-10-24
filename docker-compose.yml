@@ -3,6 +3,12 @@
 services:
   spark-master:
     build: ./spark-cluster
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+          cpus: '2.0'
     container_name: spark-master
     ports:
       - 9010:8080
@@ -79,10 +85,6 @@ services:
         tail -f /usr/local/hadoop/logs/* &
         wait
       '
-
-    # mem_limit: 3g
-    # cpus: 0.5
-    # mem_reservation: 512m
     environment:
       - YARN_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
       - HADOOP_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
@@ -96,13 +98,16 @@ services:
     build: ./spark-cluster
     container_name: spark-worker-1
     restart: always
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
     ports:
       - 9044:8080
       - 9055:7077
       - 9066:10000
-    # mem_limit: 3g
-    # cpus: 0.5
-    # mem_reservation: 512m
     depends_on:
       - spark-master
       - namenode
@@ -145,9 +150,12 @@ services:
     build: ./spark-cluster
     container_name: spark-worker-2
     restart: always
-    # mem_limit: 3g
-    # cpus: 0.5
-    # mem_reservation: 512m
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
     ports:
       - 9071:8080
       - 9088:7077
@@ -196,14 +204,17 @@ services:
     hostname: namenode
     volumes:
       - ./hadoop_installation/hadoop_data:/hadoop_data
-      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/authorized_keys
-      - ./hadoop_installation/hadoop_config/ssh/id_rsa:/root/.ssh/id_rsa
-      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+      # - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/authorized_keys
+      # - ./hadoop_installation/hadoop_config/ssh/id_rsa:/root/.ssh/id_rsa
+      # - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
       - ./hadoop_installation/hadoop_namenode:/opt/hadoop/data/nameNode
     user: root
-    # mem_limit: 3g
-    # cpus: 0.5
-    # mem_reservation: 512m
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
     ports:
       - "9870:9870"
       - 8088:8088
@@ -219,15 +230,29 @@ services:
       POSTGRES_DB: metastore_db
       POSTGRES_USER: hive
       POSTGRES_PASSWORD: password
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: '0.5'
     ports:
       - 11003:5432
+    # volumes:
+    #   - ./postgres/postgres_data:/var/lib/postgresql/data
     volumes:
-      - ./postgres/postgres_data:/var/lib/postgresql/data
+      - ./postgres/postgres_data:/var/lib/postgresql
     networks:
       - my_shared_network
 
   metastore:
     image: apache/hive:4.0.0
+    platform: linux/amd64
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
     depends_on:
       - postgres
     restart: unless-stopped
@@ -252,10 +277,6 @@ services:
       - ./spark-cluster/hadoop_config/hive-site.xml:/opt/hive/conf/hive-site.xml   
     networks:
       - my_shared_network
-
-volumes:
-  hive-db:
-  warehouse:
 
 
 networks:

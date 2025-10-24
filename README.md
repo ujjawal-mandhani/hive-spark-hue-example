@@ -1,5 +1,12 @@
 ### Required HDFS command
 
+for mac os users 
+
+```bash
+sudo chown -R $(whoami) *
+chmod -R 777 *
+```
+
 ```bash
 hdfs dfs -mkdir -p /user/spark/scripts
 hdfs dfs -put spark_udf_test.py /user/spark/scripts

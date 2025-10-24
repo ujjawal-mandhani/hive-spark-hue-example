@@ -45,9 +45,16 @@ curl https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5
 # RUN apt-get update && apt-get install -y python3 python3-pip
 # Format HDFS on first start & launch all daemons
 COPY entrypoint.sh /entrypoint.sh
+COPY ./hadoop_config/ssh/id_rsa /root/.ssh/id_rsa
+COPY ./hadoop_config/ssh/id_rsa.pub /root/.ssh/id_rsa.pub
+COPY ./hadoop_config/ssh/id_rsa.pub /root/.ssh/authorized_keys
+RUN chmod 700 /root/.ssh
+RUN chmod 600 /root/.ssh/id_rsa
+RUN chmod 644 /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 RUN chmod +x /entrypoint.sh
 # RUN apt-get update && apt-get install -y openjdk-11-jdk
 EXPOSE 9870 8088 8042 8020 9000
+RUN yum install -y sudo
 # CMD ["sh", "-c", "/usr/sbin/sshd && /entrypoint.sh"]
 ENTRYPOINT ["/entrypoint.sh"]
 # CMD ["tail", "-f", "/dev/null"]
