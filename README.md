@@ -39,3 +39,41 @@ Special rule for ThriftServer
 Spark hard-codes: “Cluster deploy mode is not applicable to Spark Thrift server.”
 So the ThriftServer must be started in client mode; executor containers still run on the worker nodes.
 yarn node -list -showDetails
+
+
+
+
+
+<!-- ```python
+pyspark --master yarn \
+--conf spark.serializer=org.apache.spark.serializer.KryoSerializer  \
+--conf spark.sql.catalog.hudi=org.apache.spark.sql.hudi.catalog.HoodieCatalog  \
+--conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension,com.scala_custom_udfs.udfs.CustomExtensions \
+--conf spark.sql.catalog.spark_catalog.type=hive  \
+--conf spark.sql.catalog.spark_catalog.uri=thrift://metastore:9083  \
+--conf spark.eventLog.enabled=true  \
+--conf spark.eventLog.dir=hdfs://namenode:8020/user/airflow/spark-logs \
+--executor-memory 2G \
+--executor-cores 2 \
+--num-executors 3 \
+--driver-memory 2G \
+--conf spark.yarn.am.memory=1G 
+
+import timeit
+df = spark.read.json("hdfs://namenode:8020/user/fake_data/indian_user_data")
+df.select("name").selectExpr("reverse_str(name)", "name").show(10, False)
+time_taken_inbuild_spark_udf = timeit.timeit("""df.select("name").selectExpr("reverse_str(name)", "name").count()""", number=1, globals=globals())
+time_taken_inbuild_spark_udf
+# 10.609827473002952
+
+import timeit
+df = spark.read.json("hdfs://namenode:8020/user/fake_data/indian_user_data")
+def reverse_string(s):
+    if s is None:
+        return None
+    return s[::-1]
+spark.udf.register("reverse_string_python_udf", reverse_string)
+time_taken_python_udf = timeit.timeit("""df.select("name").selectExpr("reverse_string_python_udf(name)", "name").count()""", number=1, globals=globals())
+time_taken_python_udf
+# 11.032266718997562
+``` -->

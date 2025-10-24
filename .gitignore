@@ -23,3 +23,4 @@ hadoop_installation/spark-3.5.0-bin-hadoop3.tgz
 spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/project/target
 spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/target/
 spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/.bsp/sbt.json
+.DS_Store
