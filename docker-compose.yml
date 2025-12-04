@@ -3,7 +3,7 @@
 services:
   spark-master:
     build: ./spark-cluster
-    platform: linux/amd64
+    # platform: linux/amd64
     deploy:
       resources:
         limits:
@@ -98,7 +98,7 @@ services:
     build: ./spark-cluster
     container_name: spark-worker-1
     restart: always
-    platform: linux/amd64
+    # platform: linux/amd64
     deploy:
       resources:
         limits:
@@ -150,7 +150,7 @@ services:
     build: ./spark-cluster
     container_name: spark-worker-2
     restart: always
-    platform: linux/amd64
+    # platform: linux/amd64
     deploy:
       resources:
         limits:
@@ -209,7 +209,7 @@ services:
       # - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
       - ./hadoop_installation/hadoop_namenode:/opt/hadoop/data/nameNode
     user: root
-    platform: linux/amd64
+    # platform: linux/amd64
     deploy:
       resources:
         limits:
@@ -230,7 +230,7 @@ services:
       POSTGRES_DB: metastore_db
       POSTGRES_USER: hive
       POSTGRES_PASSWORD: password
-    platform: linux/amd64
+    # platform: linux/amd64
     deploy:
       resources:
         limits:
@@ -247,7 +247,7 @@ services:
 
   metastore:
     image: apache/hive:4.0.0
-    platform: linux/amd64
+    # platform: linux/amd64
     deploy:
       resources:
         limits:

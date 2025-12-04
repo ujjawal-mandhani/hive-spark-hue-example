@@ -1,13 +1,9 @@
-# Dockerfile.hadoop-yarn
-# FROM openjdk:11-jre-slim
-FROM openjdk:latest
-RUN microdnf update
-RUN microdnf install yum
+FROM ubuntu:latest
+RUN apt update && apt install -y openssh-server openssh-client hostname telnet tar wget curl openjdk-17-jdk
 ENV HADOOP_HOME=/usr/local/hadoop
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
 ENV PATH=$PATH:/opt/hadoop/bin:/opt/hadoop/sbin
 # RUN apt-get update && apt-get install -y sudo openssl openssh-client curl bash procps net-tools ssh rsync && rm -rf /var/lib/apt/lists/*
-RUN yum install -y openssh-server openssh-clients hostname telnet 
 RUN HADOOP_VERSION=$(curl -s https://downloads.apache.org/hadoop/common/ | grep -o 'hadoop-[0-9.]\+/' | sed 's#/##' | sort -V | tail -n 1) && \
     echo "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION-lean.tar.gz" && \
     curl -fL "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION-lean.tar.gz" | tar xfz - -C /usr/local/share && \
@@ -35,8 +31,9 @@ RUN SPARK_VERSION=spark-3.5.0 && \
 ENV PATH="$PATH:$SPARK_HOME/bin"
 ENV PYTHONPATH="$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.9-src.zip"
 ENV PYSPARK_PYTHON=/usr/bin/python3
-RUN yum groupinstall "Development Tools" -y && yum install gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make -y  \
-&& yum install python3.11 python3.11-pip -y && pip3 install pandas pyarrow
+# RUN yum groupinstall "Development Tools" -y && yum install gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make -y  
+# \
+# && yum install python3.11 python3.11-pip -y && pip3 install pandas pyarrow
 RUN curl https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark3.5-bundle_2.12/1.0.2/hudi-spark3.5-bundle_2.12-1.0.2.jar --output "$SPARK_HOME"/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar && \
 curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-storage-api-2.8.1.jar --output "$SPARK_HOME"/jars/hive-storage-api-2.8.1.jar && \
 curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
@@ -54,7 +51,7 @@ RUN chmod 644 /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 RUN chmod +x /entrypoint.sh
 # RUN apt-get update && apt-get install -y openjdk-11-jdk
 EXPOSE 9870 8088 8042 8020 9000
-RUN yum install -y sudo
+# RUN yum install -y sudo
 # CMD ["sh", "-c", "/usr/sbin/sshd && /entrypoint.sh"]
 ENTRYPOINT ["/entrypoint.sh"]
 # CMD ["tail", "-f", "/dev/null"]

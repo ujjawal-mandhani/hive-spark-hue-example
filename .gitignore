@@ -24,3 +24,4 @@ spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/proje
 spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/target/
 spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/.bsp/sbt.json
 .DS_Store
+spark-cluster/spark-jobs/spark-jobs/torrent_data/
