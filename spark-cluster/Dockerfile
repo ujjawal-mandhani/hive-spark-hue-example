@@ -14,8 +14,8 @@ ENV PYSPARK_PYTHON=/usr/bin/python3
 RUN ssh-keygen -A
 COPY sshd_config /etc/ssh/sshd_config
 COPY ssh_config /etc/ssh/ssh_config
-COPY spark-env.sh /usr/local/share/spark/conf/spark-env.sh
-COPY slaves /usr/local/share/spark/conf/slaves
+COPY spark-env.sh $SPARK_HOME/conf/spark-env.sh
+COPY slaves $SPARK_HOME/conf/slaves
 ENV HADOOP_HOME=/usr/local/hadoop
 RUN HADOOP_VERSION=$(curl -s https://downloads.apache.org/hadoop/common/ | grep -o 'hadoop-[0-9.]\+/' | sed 's#/##' | sort -V | tail -n 1) && \
     echo "https://downloads.apache.org/hadoop/common/$HADOOP_VERSION/$HADOOP_VERSION-lean.tar.gz" && \
@@ -29,6 +29,8 @@ COPY hadoop_config/yarn-site.xml $HADOOP_CONF_DIR/yarn-site.xml
 COPY hadoop_config/mapred-site.xml $HADOOP_CONF_DIR/mapred-site.xml
 COPY hadoop_config/hive-site.xml $HADOOP_CONF_DIR/hive-site.xml
 COPY hadoop_config/hadoop-env.sh $HADOOP_CONF_DIR/hadoop-env.sh
+RUN sed -i 's/\r$//' $SPARK_HOME/conf/spark-env.sh
+RUN sed -i 's/\r$//' $HADOOP_CONF_DIR/hadoop-env.sh
 # RUN yum install -y sudo nc
 RUN curl https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark3.5-bundle_2.12/1.0.2/hudi-spark3.5-bundle_2.12-1.0.2.jar --output "$SPARK_HOME"/jars/hudi-spark3.5-bundle_2.12-1.0.2.jar && \
 curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-storage-api-2.8.1.jar --output "$SPARK_HOME"/jars/hive-storage-api-2.8.1.jar && \

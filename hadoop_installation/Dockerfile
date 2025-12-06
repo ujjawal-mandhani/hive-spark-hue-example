@@ -48,6 +48,8 @@ COPY ./hadoop_config/ssh/id_rsa.pub /root/.ssh/authorized_keys
 RUN chmod 700 /root/.ssh
 RUN chmod 600 /root/.ssh/id_rsa
 RUN chmod 644 /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+RUN sed -i 's/\r$//' /entrypoint.sh
+RUN sed -i 's/\r$//' $HADOOP_CONF_DIR/hadoop-env.sh
 RUN chmod +x /entrypoint.sh
 # RUN apt-get update && apt-get install -y openjdk-11-jdk
 EXPOSE 9870 8088 8042 8020 9000
