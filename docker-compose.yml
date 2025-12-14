@@ -3,6 +3,11 @@
 services:
   spark-master:
     build: ./spark-cluster
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+          cpus: '2.0'
     container_name: spark-master
     ports:
       - 9010:8080
@@ -10,6 +15,8 @@ services:
       - 1000:10000
       - 1005:4041
       - 1006:4040
+      - 8998:8998
+      - 18080:18080
     volumes:
       - ./spark-cluster/spark-jobs/:/home/
       - ./spark-cluster/spark-master:/opt/hadoop/data/dataNode
@@ -32,22 +39,55 @@ services:
         echo "Starting YARN NodeManager..."
         yarn --daemon start nodemanager
 
-        echo "Starting Spark Worker..."
+        echo "Starting Spark Master..."
         /usr/local/share/spark/sbin/start-master.sh;
 
+        # echo "Starting livy Server..."
+        # /usr/local/share/livy/bin/livy-server
+
+        until hdfs dfsadmin -safemode get | grep -q "Safe mode is OFF"; do
+          echo "HDFS safe mode is ON, waiting..."
+          sleep 5
+        done
+        echo "HDFS safe mode is OFF, starting thrift server..."
+
         echo "Starting Thirft Server..."
-        /usr/local/share/spark/sbin/start-thriftserver.sh --master yarn --deploy-mode client --name ThriftServer --conf spark.sql.warehouse.dir=hdfs://namenode:8020/user/airflow/dbt_output --conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3 --conf spark.executorEnv.PYSPARK_PYTHON=python3 --files hdfs://namenode:8020/user/spark/jars/pyspark.zip,hdfs://namenode:8020/user/spark/jars/py4j-0.10.9.9-src.zip
+        /usr/local/share/spark/sbin/start-thriftserver.sh --master yarn --deploy-mode client --name ThriftServer \
+          --conf spark.sql.warehouse.dir=hdfs://namenode:8020/user/airflow/dbt_output \
+          --conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3 --conf spark.executorEnv.PYSPARK_PYTHON=python3 \
+          --conf spark.serializer=org.apache.spark.serializer.KryoSerializer \
+          --conf spark.sql.catalog.hudi=org.apache.spark.sql.hudi.catalog.HoodieCatalog \
+          --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension,org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions \
+          --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog \
+          --conf spark.sql.catalog.spark_catalog.type=hive \
+          --conf spark.sql.catalog.spark_catalog.uri=thrift://metastore:9083 \
+          --conf spark.sql.catalog.iceberg=org.apache.iceberg.spark.SparkCatalog \
+          --conf spark.sql.catalog.iceberg.type=hive \
+          --conf spark.sql.catalog.iceberg.uri=thrift://metastore:9083 \
+          --conf spark.sql.catalog.iceberg.warehouse=hdfs://namenode:8020/user/airflow/dbt_output \
+          --conf spark.executor.memory=512m \
+          --conf spark.executor.cores=1 \
+          --conf spark.executor.instances=1 \
+          --files hdfs://namenode:8020/user/spark/jars/spark/pyspark.zip,hdfs://namenode:8020/user/spark/jars/spark/py4j-0.10.9.9-src.zip
+          # --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog \
+          # --conf spark.sql.extensions=org.apache.spark.sql.hudi.HoodieSparkSessionExtension \
+          # --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.hudi.catalog.HoodieCatalog \
+          # --conf spark.sql.catalog.local=org.apache.iceberg.spark.SparkCatalog \
+          # --conf spark.sql.catalog.local.type=hadoop \
+          # --conf spark.sql.catalog.local.warehouse=hdfs://namenode:8020/user/airflow/dbt_output \
+          # --conf spark.sql.catalog.spark_catalog.type=hive \
+          # --conf spark.hadoop.hive.metastore.warehouse.dir=hdfs://namenode:8020/user/airflow/dbt_output \
+        
+        echo "Starting Spark History Server..."
+        /usr/local/share/spark/sbin/start-history-server.sh
 
         tail -f /usr/local/hadoop/logs/* &
         wait
       '
-
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
     environment:
       - YARN_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
       - HADOOP_OPTS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
+      - SPARK_HISTORY_OPTS="-Dspark.history.fs.logDirectory=hdfs://namenode:8020/user/airflow/spark-logs"
     depends_on:
       - namenode
     networks:
@@ -57,13 +97,15 @@ services:
     build: ./spark-cluster
     container_name: spark-worker-1
     restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
     ports:
       - 9044:8080
       - 9055:7077
       - 9066:10000
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
     depends_on:
       - spark-master
       - namenode
@@ -106,9 +148,11 @@ services:
     build: ./spark-cluster
     container_name: spark-worker-2
     restart: always
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
     ports:
       - 9071:8080
       - 9088:7077
@@ -157,104 +201,73 @@ services:
     hostname: namenode
     volumes:
       - ./hadoop_installation/hadoop_data:/hadoop_data
-      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/authorized_keys
-      - ./hadoop_installation/hadoop_config/ssh/id_rsa:/root/.ssh/id_rsa
-      - ./hadoop_installation/hadoop_config/ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
       - ./hadoop_installation/hadoop_namenode:/opt/hadoop/data/nameNode
     user: root
-    mem_limit: 3g
-    cpus: 0.5
-    mem_reservation: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
     ports:
       - "9870:9870"
       - 8088:8088
     networks:
       - my_shared_network
   
-  # livy:
-  #   image: apache/livy:0.8.0-incubating
-  #   container_name: livy
-  #   depends_on:
-  #     - namenode
-  #   ports:
-  #     - "8998:8998"
-  #   environment:
-  #     - LIVY_SPARK_MASTER=yarn
-  #     - HADOOP_CONF_DIR=/etc/hadoop/conf
-  #   volumes:
-  #     - ./spark-cluster/hadoop_config:/etc/hadoop/conf
-  #   networks:
-  #     - my_shared_network
-  
-  # postgres:
-  #   image: postgres
-  #   restart: unless-stopped
-  #   container_name: postgres
-  #   hostname: postgres
-  #   environment:
-  #     POSTGRES_DB: 'metastore_db'
-  #     POSTGRES_USER: 'hive'
-  #     POSTGRES_PASSWORD: 'password'
-  #   ports:
-  #     - 11003:5432
-  #   volumes:
-  #     - ./postgres/postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - my_shared_network
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_DB: metastore_db
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: password
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: '0.5'
+    ports:
+      - 11003:5432
+    # volumes:
+    #   - ./postgres/postgres_data:/var/lib/postgresql/data
+    volumes:
+      - ./postgres/postgres_data:/var/lib/postgresql
+    networks:
+      - my_shared_network
 
-  # metastore:
-  #   image: apache/hive:4.0.0
-  #   depends_on:
-  #     - postgres
-  #   restart: unless-stopped
-  #   container_name: metastore
-  #   hostname: metastore
-  #   environment:
-  #     DB_DRIVER: postgres
-  #     SERVICE_NAME: 'metastore'
-  #     SERVICE_OPTS: '-Xmx1G -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore_db -Djavax.jdo.option.ConnectionUserName=hive -Djavax.jdo.option.ConnectionPassword=password'
-  #   ports:
-  #     - '9083:9083'
-  #   volumes:
-  #     - ./hive-data:/opt/hive/data/warehouse
-  #     - type: bind
-  #       source: ./jars/postgresql-42.6.0.jar
-  #       target: /opt/hive/lib/postgres.jar
-  #   networks:
-  #     - my_shared_network
-
-  # hiveserver2:
-  #   image: apache/hive:4.0.0
-  #   restart: unless-stopped
-  #   container_name: hiveserver2
-  #   environment:
-  #     HIVE_SERVER2_THRIFT_PORT: 10000
-  #     SERVICE_OPTS: '-Xmx1G -Dhive.metastore.uris=thrift://metastore:9083'
-  #     IS_RESUME: 'true'
-  #     SERVICE_NAME: hiveserver2
-  #   ports:
-  #     - 10000:10000
-  #     - 10002:10002
-  #   volumes:
-  #     - ./hive-data:/opt/hive/data/warehouse
-  #   networks:
-  #     - my_shared_network
-
-  # hue:
-  #   image: gethue/hue
-  #   restart: unless-stopped
-  #   container_name: hue
-  #   ports:
-  #     - 11004:8888
-  #   volumes:
-  #     - ./hue.ini/hue.ini:/usr/share/hue/desktop/conf/hue.ini
-  #     - ./hue.ini/desktop.db:/usr/share/hue/desktop/desktop.db
-  #   networks:
-  #     - my_shared_network
-
-volumes:
-  hive-db:
-  warehouse:
+  metastore:
+    image: apache/hive:4.0.0
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    container_name: metastore
+    hostname: metastore
+    environment:
+      DB_DRIVER: postgres
+      SERVICE_NAME: 'metastore' 
+      # SERVICE_OPTS: '-Xmx1G -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore_db -Djavax.jdo.option.ConnectionUserName=hive -Djavax.jdo.option.ConnectionPassword=password'
+      SERVICE_OPTS: >-
+        -Xmx1G
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore_db
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=password
+    ports:
+      - '9083:9083'
+    volumes:
+      - type: bind
+        source: ./jars/postgresql-42.6.0.jar
+        target: /opt/hive/lib/postgres.jar
+      - ./spark-cluster/hadoop_config/hive-site.xml:/opt/hive/conf/hive-site.xml   
+    networks:
+      - my_shared_network
 
 
 networks:

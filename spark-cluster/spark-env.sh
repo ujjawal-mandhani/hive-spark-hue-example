@@ -46,7 +46,7 @@
 
 # Options for the daemons used in the standalone deploy mode
 export SPARK_MASTER_HOST=spark-master
-export JAVA_HOME=/usr/java/openjdk-18
+export JAVA_HOME=/usr/
 # - SPARK_MASTER_HOST, to bind the master to a different IP address or hostname
 # - SPARK_MASTER_PORT / SPARK_MASTER_WEBUI_PORT, to use non-default ports for the master
 # - SPARK_MASTER_OPTS, to set config properties only for the master (e.g. "-Dx=y")
