@@ -26,6 +26,8 @@ COPY hadoop_config/yarn-site.xml $HADOOP_CONF_DIR/yarn-site.xml
 COPY hadoop_config/mapred-site.xml $HADOOP_CONF_DIR/mapred-site.xml
 COPY hadoop_config/hive-site.xml $HADOOP_CONF_DIR/hive-site.xml
 COPY hadoop_config/hadoop-env.sh $HADOOP_CONF_DIR/hadoop-env.sh
+RUN sed -i 's/\r$//' $SPARK_HOME/conf/spark-env.sh
+RUN sed -i 's/\r$//' $HADOOP_CONF_DIR/hadoop-env.sh
 RUN curl https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark4.0-bundle_2.13/1.1.0/hudi-spark4.0-bundle_2.13-1.1.0.jar  --output "$SPARK_HOME"/jars/hudi-spark4.0-bundle_2.13-1.1.0.jar && \
 curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-storage-api-2.8.1.jar --output "$SPARK_HOME"/jars/hive-storage-api-2.8.1.jar && \
 curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
