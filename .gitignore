@@ -18,3 +18,5 @@ spark-cluster/spark-jobs/metastore_db
 spark-cluster/spark-jobs/derby.log
 spark-cluster/spark-jobs/airflow
 spark-cluster/spark-jobs/spark-jobs/.DS_Store
+spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/project/target
+spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/target

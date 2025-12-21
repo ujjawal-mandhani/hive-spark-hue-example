@@ -1,6 +1,6 @@
 import Dependencies._
 
-ThisBuild / scalaVersion     := "2.12.18"
+ThisBuild / scalaVersion     := "2.13.14"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "com.example"
 ThisBuild / organizationName := "example"
@@ -9,8 +9,8 @@ lazy val root = (project in file("."))
   .settings(
     name := "spark_udf_test_jvm",
     libraryDependencies ++= Seq(
-      "org.apache.spark" %% "spark-core" % "3.5.0" % "provided",
-      "org.apache.spark" %% "spark-sql"  % "3.5.0" % "provided",
+      "org.apache.spark" %% "spark-core" % "4.0.1" % "provided",
+      "org.apache.spark" %% "spark-sql"  % "4.0.1" % "provided",
       "org.scalatest" %% "scalatest" % "3.2.16" % Test
     )
   )
