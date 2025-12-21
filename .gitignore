@@ -17,3 +17,4 @@ spark-cluster/spark-worker-2
 spark-cluster/spark-jobs/metastore_db
 spark-cluster/spark-jobs/derby.log
 spark-cluster/spark-jobs/airflow
+spark-cluster/spark-jobs/spark-jobs/.DS_Store

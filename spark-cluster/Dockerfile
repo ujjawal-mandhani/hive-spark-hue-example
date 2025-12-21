@@ -31,6 +31,10 @@ curl https://repo1.maven.org/maven2/org/apache/hive/hive-storage-api/2.8.1/hive-
 curl https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar --output "$SPARK_HOME"/jars/slf4j-api-1.7.36.jar && \
 curl https://repo1.maven.org/maven2/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar --output "$SPARK_HOME"/jars/postgresql-42.6.0.jar && \
 curl https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-4.0_2.13/1.10.0/iceberg-spark-runtime-4.0_2.13-1.10.0.jar --output "$SPARK_HOME"/jars/iceberg-spark-runtime-4.0_2.13-1.10.0.jar
+RUN apt install -y curl gnupg apt-transport-https && \
+    curl -fsSL https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0x99E82A75642AC823 | gpg --dearmor -o /usr/share/keyrings/sbt-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/sbt-keyring.gpg] https://repo.scala-sbt.org/scalasbt/debian all main"  > /etc/apt/sources.list.d/sbt.list && \
+    apt update && apt install -y sbt
 # RUN rm -f /etc/yum.repos.d/bintray-rpm.repo && \
 #     curl -L https://www.scala-sbt.org/sbt-rpm.repo > sbt-rpm.repo && \
 #     mv sbt-rpm.repo /etc/yum.repos.d/ && \
