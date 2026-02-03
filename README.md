@@ -68,3 +68,26 @@ dcexec namenode jps -> NameNode, ResourceManager
 Special rule for ThriftServer
 Spark hard-codes: “Cluster deploy mode is not applicable to Spark Thrift server.”
 So the ThriftServer must be started in client mode; executor containers still run on the worker nodes.
+
+
+
+```python
+>>> from pyspark.sql.functions import *
+>>> df.withColumn("event_time", expr("cast(unix_timestamp(current_timestamp()) * 1000 as long)")).coalesce(1).write.mode("overwrite").parquet("hdfs://namenode:8020/user/airflow/organisation/")
+```
+
+sbt clean assembly
+
+
+spark-submit   --class com.custom_pinot_ingestion.test.PinotSparkIngestion   --master local[*] --jars pinot-all-1.4.0-jar-with-dependencies.jar,pinot-hdfs-1.4.0-shaded.jar --files jobSpec.yaml  spark_udf_test_jvm/target/scala-2.13/spark_udf_test_jvm-assembly-0.1.0-SNAPSHOT.jar
+
+
+spark-submit \
+  --master local[*] \
+  --conf "spark.driver.extraJavaOptions=-Dplugins.dir=/home/spark-jobs/spark_scala_project/apache-pinot-1.4.0-bin/plugins" \
+  --conf "spark.executor.extraJavaOptions=-Dplugins.dir=/home/spark-jobs/spark_scala_project/apache-pinot-1.4.0-bin/plugins" \
+  --conf "spark.pinot.auth.token=YWRtaW46dmVyeXNlY3JldA" \
+  --jars pinot-all-1.4.0-jar-with-dependencies.jar \
+  --files jobSpec.yaml,organisation_data.json,organisation_table.json \
+  --class com.custom_pinot_ingestion.test.PinotSparkIngestion \
+  spark_udf_test_jvm/target/scala-2.13/spark_udf_test_jvm-assembly-0.1.0-SNAPSHOT.jar

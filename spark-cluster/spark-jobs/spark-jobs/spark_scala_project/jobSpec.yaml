@@ -1,0 +1,44 @@
+# executionFrameworkSpec:
+#   name: standalone
+#   segmentGenerationJobRunnerClassName: org.apache.pinot.plugin.ingestion.batch.standalone.SegmentGenerationJobRunner
+#   segmentUriPushJobRunnerClassName: org.apache.pinot.plugin.ingestion.batch.standalone.SegmentUriPushJobRunner
+
+# jobType: SegmentCreationAndUriPush
+
+executionFrameworkSpec:
+  name: standalone
+  segmentGenerationJobRunnerClassName: org.apache.pinot.plugin.ingestion.batch.standalone.SegmentGenerationJobRunner
+  segmentTarPushJobRunnerClassName: org.apache.pinot.plugin.ingestion.batch.standalone.SegmentTarPushJobRunner
+
+jobType: SegmentCreationAndTarPush
+
+inputDirURI: ${inputDirURI}
+outputDirURI: ${outputDirURI}
+
+recordReaderSpec:
+  dataFormat: parquet
+  className: org.apache.pinot.plugin.inputformat.parquet.ParquetRecordReader
+
+tableSpec:
+  tableName: ${TABLENAME}
+  schemaURI: ${schemaURI}
+  tableConfigURI: ${tableConfigURI}
+
+pinotClusterSpecs:
+  - controllerURI: http://host.docker.internal:54882
+    # authToken: Basic YWRtaW46dmVyeXNlY3JldA
+
+pinotFSSpecs:
+  - scheme: hdfs
+    className: org.apache.pinot.plugin.filesystem.HadoopPinotFS
+    configs:
+      hadoop.conf.path: /etc/hadoop/conf
+
+segmentNameGeneratorSpec:
+  type: simple
+
+
+pushJobSpec:
+  pushAttempts: 3
+  pushRetryIntervalMillis: 1000
+  pushParallelism: 1

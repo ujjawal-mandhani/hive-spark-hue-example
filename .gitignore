@@ -20,3 +20,9 @@ spark-cluster/spark-jobs/airflow
 spark-cluster/spark-jobs/spark-jobs/.DS_Store
 spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/project/target
 spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/target
+spark-cluster/spark-jobs/spark-jobs/spark_scala_project/apache-pinot-1.4.0-bin
+spark-cluster/spark-jobs/spark-jobs/spark_scala_project/apache-pinot-1.4.0-bin.tar.gz
+spark-cluster/spark-jobs/spark-jobs/spark_scala_project/pinot-all-1.4.0-jar-with-dependencies.jar
+.gitignore
+spark-cluster/spark-jobs/spark-jobs/spark_scala_project/spark_udf_test_jvm/project
+.DS_Store

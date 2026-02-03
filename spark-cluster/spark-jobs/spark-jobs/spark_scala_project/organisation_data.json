@@ -1,0 +1,49 @@
+{
+    "schemaName": "organisation_data",
+    "dimensionFieldSpecs": [
+        {
+            "name": "Index",
+            "dataType": "STRING"
+        },
+        {
+            "name": "OrganizationId",
+            "dataType": "STRING"
+        },
+        {
+            "name": "Name",
+            "dataType": "STRING"
+        },
+        {
+            "name": "Website",
+            "dataType": "STRING"
+        },
+        {
+            "name": "Country",
+            "dataType": "STRING"
+        },
+        {
+            "name": "Description",
+            "dataType": "STRING"
+        },
+        {
+            "name": "Founded",
+            "dataType": "STRING"
+        },
+        {
+            "name": "Industry",
+            "dataType": "STRING"
+        },
+        {
+            "name": "Numberofemployees",
+            "dataType": "STRING"
+        }
+    ],
+    "dateTimeFieldSpecs": [
+        {
+            "name": "event_time",
+            "dataType": "LONG",
+            "format": "1:MILLISECONDS:EPOCH",
+            "granularity": "1:MILLISECONDS"
+        }
+    ]
+}

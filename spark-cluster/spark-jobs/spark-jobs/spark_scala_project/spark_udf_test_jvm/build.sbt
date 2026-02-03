@@ -1,5 +1,5 @@
 import Dependencies._
-
+import sbtassembly.AssemblyPlugin.autoImport._
 ThisBuild / scalaVersion     := "2.13.14"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "com.example"
@@ -8,12 +8,41 @@ ThisBuild / organizationName := "example"
 lazy val root = (project in file("."))
   .settings(
     name := "spark_udf_test_jvm",
+    resolvers ++= Seq(
+      "Confluent" at "https://packages.confluent.io/maven/",
+      // "Apache Releases" at "https://repository.apache.org/content/repositories/releases/",
+      // "Apache Snapshots" at "https://repository.apache.org/content/repositories/snapshots/",
+      "Maven Central" at "https://repo1.maven.org/maven2/"
+    ),
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % "4.0.1" % "provided",
       "org.apache.spark" %% "spark-sql"  % "4.0.1" % "provided",
-      "org.scalatest" %% "scalatest" % "3.2.16" % Test
-    )
+      // "org.scalatest" %% "scalatest" % "3.2.16" % Test,
+      // "org.apache.pinot" % "pinot" % "1.4.0",
+      // "org.apache.pinot" % "pinot-distribution" % "1.4.0",
+      // "org.apache.pinot" % "pinot-plugins" % "1.4.0",
+      // "org.apache.pinot" % "pinot-core" % "1.4.0",
+      // "org.apache.pinot" % "pinot-tools" % "1.4.0"
+      "org.apache.spark" %% "spark-core" % "4.0.1" % "provided",
+      "org.apache.spark" %% "spark-sql"  % "4.0.1" % "provided",
+      "org.apache.pinot" % "pinot-spi"    % "1.4.0",
+      "org.apache.pinot" % "pinot-common" % "1.4.0",
+      "org.apache.pinot" % "pinot-core"   % "1.4.0",
+      "org.codehaus.groovy" % "groovy" % "3.0.21",
+      "org.apache.pinot" % "pinot-plugins" % "1.4.0",
+      "org.apache.httpcomponents" % "httpclient" % "4.5.14",
+      "org.apache.httpcomponents" % "httpmime" % "4.5.14"
+    ),
+    Compile / unmanagedSources := {
+      val filesToIgnore = Set("Hello.scala")
+      (Compile / unmanagedSources).value.filterNot(file => filesToIgnore.contains(file.getName))
+    },
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", _*) => MergeStrategy.discard
+      case _                        => MergeStrategy.first
+    }
   )
+
 
 // Uncomment the following for publishing to Sonatype.
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for more detail.
